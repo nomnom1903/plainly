@@ -131,7 +131,7 @@ export default function Home() {
             <span style={{ fontFamily: LORA, fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text)" }}>Plainly</span>
           </div>
           <h1 style={{ fontFamily: LORA, fontSize: 30, fontWeight: 500, color: "var(--text)", lineHeight: 1.3, marginBottom: 10, letterSpacing: "-0.02em" }}>
-            Ask your insurance questions—<br/>
+            Your insurance questions,<br/>
             <em style={{ fontWeight: 400 }}>answered plainly.</em>
           </h1>
           <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.6, maxWidth: 420, margin: "0 auto" }}>
@@ -185,9 +185,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="fade-up" style={{ marginTop: 28, fontSize: 12, color: "var(--text3)", textAlign: "center", animationDelay: "0.2s" }}>
-          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" style={{ verticalAlign: "middle", marginRight: 4 }}><rect x="2" y="5" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/><path d="M5 5V4a2 2 0 0 1 4 0v1" stroke="currentColor" strokeWidth="1.2"/></svg>
-          Your document stays in this browser session only. Nothing is stored or shared.
+        <div className="fade-up" style={{ marginTop: 28, fontSize: 12, color: "var(--text3)", textAlign: "center", animationDelay: "0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}><rect x="2" y="5" width="10" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/><path d="M5 5V4a2 2 0 0 1 4 0v1" stroke="currentColor" strokeWidth="1.2"/></svg>
+          <span>Your document stays in this browser session only. Nothing is stored or shared.</span>
         </div>
       </div>
     </main>

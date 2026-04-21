@@ -14,15 +14,17 @@ type Message = {
   type?: "answer" | "unknown" | "error" | "info";
 };
 
-/* ─── Parse [Page X] citations from text ─── */
-function parseCitations(text: string) {
-  const parts: { type: "text" | "citation"; content?: string; page?: number }[] = [];
-  const regex = /\[Page (\d+)\]/g;
+/* ─── Parse [Page X] citations and **bold** markdown from text ─── */
+function parseContent(text: string) {
+  type Segment = { type: "text" | "bold" | "citation"; content?: string; page?: number };
+  const parts: Segment[] = [];
+  const regex = /\[Page (\d+)\]|\*\*(.+?)\*\*/g;
   let lastIndex = 0;
   let match;
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) parts.push({ type: "text", content: text.slice(lastIndex, match.index) });
-    parts.push({ type: "citation", page: parseInt(match[1]) });
+    if (match[1]) parts.push({ type: "citation", page: parseInt(match[1]) });
+    else parts.push({ type: "bold", content: match[2] });
     lastIndex = regex.lastIndex;
   }
   if (lastIndex < text.length) parts.push({ type: "text", content: text.slice(lastIndex) });
@@ -52,7 +54,7 @@ function MessageBubble({ msg, activeCitation, onCitationClick }: { msg: Message;
   }
 
   const isUnknown = msg.type === "unknown";
-  const parts = parseCitations(msg.content || "");
+  const parts = parseContent(msg.content || "");
 
   return (
     <div className="bubble-enter" style={{ marginBottom: 24 }}>
@@ -62,7 +64,7 @@ function MessageBubble({ msg, activeCitation, onCitationClick }: { msg: Message;
         </div>
         <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text2)", letterSpacing: "0.02em" }}>Plainly</span>
       </div>
-      <div style={{ background: isUnknown ? "var(--red-bg)" : "white", border: `1px solid ${isUnknown ? "rgba(192,57,43,0.2)" : "var(--border)"}`, borderRadius: "4px 18px 18px 18px", padding: "14px 18px", maxWidth: "82%", fontSize: 14.5, lineHeight: 1.65, color: "var(--text)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+      <div style={{ background: isUnknown ? "var(--red-bg)" : "white", border: `1px solid ${isUnknown ? "rgba(192,57,43,0.2)" : "var(--border)"}`, borderRadius: "4px 18px 18px 18px", padding: "14px 18px", maxWidth: "76%", fontSize: 14.5, lineHeight: 1.7, color: "var(--text)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
         {isUnknown && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(192,57,43,0.15)" }}>
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="var(--red)" strokeWidth="1.5"/><path d="M10 6v5M10 13.5v.5" stroke="var(--red)" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -71,9 +73,9 @@ function MessageBubble({ msg, activeCitation, onCitationClick }: { msg: Message;
         )}
         <p style={{ margin: 0 }}>
           {parts.map((part, i) =>
-            part.type === "text"
-              ? <span key={i}>{part.content}</span>
-              : <CitationBadge key={i} page={part.page!} isActive={activeCitation === part.page} onClick={onCitationClick} />
+            part.type === "text" ? <span key={i}>{part.content}</span>
+            : part.type === "bold" ? <strong key={i}>{part.content}</strong>
+            : <CitationBadge key={i} page={part.page!} isActive={activeCitation === part.page} onClick={onCitationClick} />
           )}
         </p>
       </div>
@@ -240,7 +242,7 @@ export default function ChatPage() {
   const userMessages = messages.filter(m => m.role === "user");
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+    <div className="chat-bg" style={{ height: "100vh", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
       {/* Top bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, background: "white", borderBottom: "1px solid var(--border)", flexShrink: 0, zIndex: 5, gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -258,12 +260,15 @@ export default function ChatPage() {
           </button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 12px 4px 8px", fontSize: 12, color: "var(--text2)", maxWidth: 260, overflow: "hidden", flexShrink: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px 4px 8px", fontSize: 12, color: "var(--text2)", maxWidth: 300, overflow: "hidden", flexShrink: 1 }}>
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><path d="M3 2h7l4 4v9H3V2z" fill="var(--surface2)" stroke="var(--border2)" strokeWidth="1.2"/><path d="M10 2v4h4" fill="none" stroke="var(--border2)" strokeWidth="1.2"/></svg>
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ color: "var(--text3)", whiteSpace: "nowrap" }}>Viewing:</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)", fontWeight: 500 }}>
             {isDemo ? "Sample Plan — Demo" : (docName || "Your document")}
           </span>
           {isDemo && <span style={{ background: "var(--teal)", color: "white", fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 10, flexShrink: 0 }}>DEMO</span>}
+          <div style={{ width: 1, height: 12, background: "var(--border)", flexShrink: 0, margin: "0 2px" }} />
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--teal)", flexShrink: 0 }} />
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
@@ -271,10 +276,6 @@ export default function ChatPage() {
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
             History {userMessages.length > 0 && <span style={{ background: "var(--teal)", color: "white", fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 10, marginLeft: 2 }}>{userMessages.length}</span>}
           </button>
-          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--teal)" }} />
-            <span style={{ fontSize: 12, color: "var(--teal)", fontWeight: 500 }}>Ready</span>
-          </div>
         </div>
       </div>
 
@@ -282,7 +283,7 @@ export default function ChatPage() {
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* History sidebar */}
         {historyOpen && (
-          <div style={{ width: 220, flexShrink: 0, borderRight: "1px solid var(--border)", background: "white", display: "flex", flexDirection: "column", overflowY: "auto", animation: "slideInLeft 0.2s ease" }}>
+          <div className="sidebar-bg" style={{ width: 220, flexShrink: 0, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflowY: "auto", animation: "slideInLeft 0.2s ease" }}>
             <div style={{ padding: "14px 14px 8px", fontSize: 11, fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--text3)" }}>This session</div>
             {userMessages.length === 0
               ? <div style={{ padding: "8px 14px 14px", fontSize: 12.5, color: "var(--text3)", lineHeight: 1.5 }}>Your questions will appear here as you ask them.</div>
@@ -305,7 +306,7 @@ export default function ChatPage() {
 
         {/* Chat + citation */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-          <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 24px 8px", paddingRight: activeCitation !== null ? 300 : 24, transition: "padding-right 0.25s ease" }}>
+          <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 24px 8px", paddingRight: activeCitation !== null ? 300 : 24, transition: "padding-right 0.25s ease", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
             {messages.map(msg => (
               <div key={msg.id} ref={el => { if (el) msgRefs.current[msg.id] = el; }}>
                 <MessageBubble msg={msg} activeCitation={activeCitation} onCitationClick={p => setActiveCitation(prev => prev === p ? null : p)} />
@@ -320,35 +321,37 @@ export default function ChatPage() {
 
       {/* Input area */}
       <div style={{ padding: "12px 20px 16px", background: "white", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-        {messages.length <= 1 && (
-          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-            {QUICK_QUESTIONS.map((q, i) => (
-              <button key={i} onClick={() => sendMessage(q)} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "5px 12px", fontSize: 12.5, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit", transition: "border-color 0.15s" }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--teal)"}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"}
-              >{q}</button>
-            ))}
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          {messages.length <= 1 && (
+            <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+              {QUICK_QUESTIONS.map((q, i) => (
+                <button key={i} onClick={() => sendMessage(q)} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "5px 12px", fontSize: 12.5, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit", transition: "border-color 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--teal)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"}
+                >{q}</button>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={e => { setInput(e.target.value); e.currentTarget.style.height = "auto"; e.currentTarget.style.height = Math.min(e.currentTarget.scrollHeight, 120) + "px"; }}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              placeholder="Ask anything about your coverage…"
+              style={{ flex: 1, height: 44, minHeight: 44, padding: "11px 14px", background: "var(--surface)", border: "1.5px solid var(--border)", borderRadius: 12, fontSize: 14.5, color: "var(--text)", outline: "none", fontFamily: "inherit", lineHeight: 1.5, transition: "border-color 0.15s" }}
+              onFocus={e => (e.currentTarget.style.borderColor = "var(--teal)")}
+              onBlur={e => (e.currentTarget.style.borderColor = "var(--border)")}
+            />
+            <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
+              style={{ width: 44, height: 44, borderRadius: 12, border: "none", flexShrink: 0, background: input.trim() && !loading ? "var(--teal)" : "var(--surface2)", color: "white", cursor: input.trim() && !loading ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.15s", opacity: input.trim() && !loading ? 1 : 0.4 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 10h14M10 4l7 6-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
           </div>
-        )}
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => { setInput(e.target.value); e.currentTarget.style.height = "auto"; e.currentTarget.style.height = Math.min(e.currentTarget.scrollHeight, 120) + "px"; }}
-            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-            placeholder="Ask anything about your coverage…"
-            style={{ flex: 1, height: 44, minHeight: 44, padding: "11px 14px", background: "var(--surface)", border: "1.5px solid var(--border)", borderRadius: 12, fontSize: 14.5, color: "var(--text)", outline: "none", fontFamily: "inherit", lineHeight: 1.5, transition: "border-color 0.15s" }}
-            onFocus={e => (e.currentTarget.style.borderColor = "var(--teal)")}
-            onBlur={e => (e.currentTarget.style.borderColor = "var(--border)")}
-          />
-          <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
-            style={{ width: 44, height: 44, borderRadius: 12, border: "none", flexShrink: 0, background: input.trim() && !loading ? "var(--teal)" : "var(--surface2)", color: input.trim() && !loading ? "white" : "var(--text3)", cursor: input.trim() && !loading ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.15s, color 0.15s" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3 10h14M10 4l7 6-7 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
-        </div>
-        <div style={{ marginTop: 8, fontSize: 11.5, color: "var(--text3)", textAlign: "center" }}>
-          Answers are based on your document only. For decisions, always confirm with your insurer.
+          <div style={{ marginTop: 8, fontSize: 11.5, color: "var(--text3)", textAlign: "center" }}>
+            Answers are based on your document only. For decisions, always confirm with your insurer.
+          </div>
         </div>
       </div>
     </div>

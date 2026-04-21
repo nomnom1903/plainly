@@ -1,13 +1,18 @@
-import { createRequire } from "node:module";
-// voyageai ESM build has broken directory imports; force CJS via createRequire
-const { VoyageAIClient } = createRequire(import.meta.url)("voyageai") as typeof import("voyageai");
-
-const client = new VoyageAIClient({ apiKey: process.env.VOYAGE_API_KEY! });
+const VOYAGE_URL = "https://api.voyageai.com/v1/embeddings";
 const MODEL = "voyage-2";
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  const response = await client.embed({ input: texts, model: MODEL });
-  return (response.data ?? []).map((item) => item.embedding ?? []);
+  const res = await fetch(VOYAGE_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ input: texts, model: MODEL }),
+  });
+  if (!res.ok) throw new Error(`Voyage AI error: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  return data.data.map((item: { embedding: number[] }) => item.embedding);
 }
 
 export async function embedQuery(query: string): Promise<number[]> {

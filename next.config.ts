@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["voyageai", "pdfjs-dist"],
+  serverExternalPackages: ["pdfjs-dist"],
 };
 
 export default nextConfig;
