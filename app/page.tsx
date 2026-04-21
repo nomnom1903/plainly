@@ -85,7 +85,7 @@ export default function Home() {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
-      router.push(`/chat/${data.sessionId}`);
+      router.push(`/chat/${data.sessionId}?name=${encodeURIComponent(file.name)}`);
     } catch (err: any) {
       setUploadError(err.message || "Upload failed. Please try again.");
     }

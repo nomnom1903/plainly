@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
         const citations = chunks.map(c => ({ page: c.page_num, text: c.chunk_text }));
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "citations", data: citations })}\n\n`));
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-      } catch {
+      } catch (err) {
+        console.error("[chat stream error]", err);
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify("Something went wrong. Please try again.")}\n\n`)
         );

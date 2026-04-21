@@ -140,6 +140,7 @@ export default function ChatPage() {
   const sessionId = params.sessionId as string;
   const isDemo = sessionId.startsWith("demo-");
   const initialQ = searchParams.get("q");
+  const docName = searchParams.get("name");
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -260,7 +261,7 @@ export default function ChatPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 12px 4px 8px", fontSize: 12, color: "var(--text2)", maxWidth: 260, overflow: "hidden", flexShrink: 1 }}>
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><path d="M3 2h7l4 4v9H3V2z" fill="var(--surface2)" stroke="var(--border2)" strokeWidth="1.2"/><path d="M10 2v4h4" fill="none" stroke="var(--border2)" strokeWidth="1.2"/></svg>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {isDemo ? "Sample Plan — Demo" : "Your document"}
+            {isDemo ? "Sample Plan — Demo" : (docName || "Your document")}
           </span>
           {isDemo && <span style={{ background: "var(--teal)", color: "white", fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 10, flexShrink: 0 }}>DEMO</span>}
         </div>

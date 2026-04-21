@@ -23,7 +23,7 @@ export async function* streamAnswer(
     .join("\n\n---\n\n");
 
   const stream = anthropic.messages.stream({
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
     temperature: 0.2,
     system: SYSTEM_PROMPT,

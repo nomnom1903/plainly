@@ -1,4 +1,6 @@
-import { VoyageAIClient } from "voyageai";
+import { createRequire } from "node:module";
+// voyageai ESM build has broken directory imports; force CJS via createRequire
+const { VoyageAIClient } = createRequire(import.meta.url)("voyageai") as typeof import("voyageai");
 
 const client = new VoyageAIClient({ apiKey: process.env.VOYAGE_API_KEY! });
 const MODEL = "voyage-2";
