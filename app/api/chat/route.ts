@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   if (chunks.length === 0) {
     return new Response(
-      "data: I couldn't find any relevant information in your document. I'd recommend calling your insurer directly.\n\ndata: [DONE]\n\n",
+      `data: ${JSON.stringify("I couldn't find any relevant information in your document. I'd recommend calling your insurer directly.")}\n\ndata: [DONE]\n\n`,
       { headers: { "Content-Type": "text/event-stream" } }
     );
   }
@@ -29,11 +29,15 @@ export async function POST(req: NextRequest) {
         for await (const token of streamAnswer(question, chunks)) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(token)}\n\n`));
         }
+        // Emit retrieved chunks so the frontend can populate the citation panel
+        const citations = chunks.map(c => ({ page: c.page_num, text: c.chunk_text }));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "citations", data: citations })}\n\n`));
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-      } catch (err) {
+      } catch {
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify("Something went wrong. Please try again.")}\n\n`)
         );
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } finally {
         controller.close();
       }
