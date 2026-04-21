@@ -1,6 +1,11 @@
+import { join } from "path";
+import { pathToFileURL } from "url";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist/legacy/build/pdf.mjs";
 
-GlobalWorkerOptions.workerSrc = "";
+// pdfjs-dist v5 in Node.js CJS — must use a file:// URL for workerSrc
+GlobalWorkerOptions.workerSrc = pathToFileURL(
+  join(process.cwd(), "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs")
+).href;
 
 export type PageChunk = {
   text: string;
